@@ -633,12 +633,6 @@ var wireframeMaterial = new THREE.ShaderMaterial({
 	transparent: true,
 });
 
-var wireframeOpacityIncrease = false;
-var wireframeOpacityChangeDelta = 0.003;
-var wireframeOpacityValue = 0.0;
-var wireframeOpacityValueMin = -0.1;
-var wireframeOpacityValueMax = 1.1;
-
 
 // let str_vertex_shader_start = "uniform bool noise;\n float random(vec2 c){\n return fract(sin(dot(c.xy ,vec2(12.9898,78.233))) * 43758.5453); \n } \n"
 let str_vertex_shader_start = "uniform bool noise;\n";
@@ -772,64 +766,7 @@ loader.load("lens.glb",(gltf)=>{
 	
 })
 
-function step(timestamp) {
-	if(!wireframeOpacityIncrease ){
-		wireframeOpacityValue -= wireframeOpacityChangeDelta;
-		if(wireframeOpacityValue < wireframeOpacityValueMin){
-			wireframeOpacityValue = wireframeOpacityValueMin;
-			wireframeOpacityIncrease = true;
-		}
-		
-	}
-	else{
-		wireframeOpacityValue += wireframeOpacityChangeDelta;
-		if(wireframeOpacityValue > wireframeOpacityValueMax){
-			wireframeOpacityValue = wireframeOpacityValueMax;
-			wireframeOpacityIncrease = false;
-		}
-		
-	}
 
-	if(wireframeOpacityValue > .05 && wireframeOpacityValue < .95){
-		startGlassesNoise = false;
-	}
-	else{
-		startGlassesNoise = true;
-	}
-	if(wireframeOpacityValue >= 0.0 && wireframeOpacityValue <=1.0){
-		wireframeMaterial.uniforms.progress.value = wireframeOpacityValue;
-	}
-
-
-	
-	if(stopWireframeAnimationAfterIterationCompleted &&
-		wireframeMaterial.uniforms.progress.value == 1 ||
-		wireframeMaterial.uniforms.progress.value == 0
-	){
-		stopWireframeAnimationAfterIterationCompleted = false;
-	}
-
-
-	// Math.randomize();
-	// wireframeMaterial.uniforms.rand.value = Math.random();
-	// modelMaterial.uniforms.rand.value = Math.random();
-	
-	// renderer.render(scene, camera);
-
-	// timestamp *= 0.001;  // convert to seconds
-    // const deltaTime = timestamp - then;
-    // then = timestamp;
-	// composer.render(deltaTime);
-	// if(wireframeMaterial.uniforms.progress.value > 0.7 
-	// 	|| wireframeMaterial.uniforms.progress.value < 0.3){
-	// 		glitchMaterials.forEach(e => {
-	// 			e.uniforms.rand.value = Math.random();
-				
-	// 		});
-	// }
-
-	// window.requestAnimationFrame(step);
-}
 
 // HDR LIGHT
 
@@ -877,8 +814,104 @@ let rotateGlassesArountLocalAxis = false;
 var localrotationY = 0;
 var localrotationX = 0;
 const localrotationDefaultX = THREE.Math.degToRad(-15);
+
+var wireframeOpacityIncrease = false;
+var wireframeOpacityChangeDelta = 0.003;
+var wireframeOpacityValueMin = -0.1;
+var wireframeOpacityValueMax = 1.1;
+var wireframeOpacityValue = 0.0;
+var wireframeAnimationPause = false;
+var wireframeAppear = false;
+var wireframeHide = false;
+var wireframeAppearCompleted = false;
+var wireframeHideCompleted = false;
 let stopWireframeAnimationAfterIterationCompleted = false;
 let startGlassesNoise = false;
+
+
+
+function step(timestamp) {
+	console.log("wireframeAnimationPause: " + wireframeAnimationPause);
+	if(wireframeAnimationPause){return;}
+	if(!wireframeOpacityIncrease ){
+		wireframeOpacityValue -= wireframeOpacityChangeDelta;
+		if(wireframeOpacityValue < wireframeOpacityValueMin){
+			wireframeOpacityValue = wireframeOpacityValueMin;
+			wireframeOpacityIncrease = true;
+		}
+		
+	}
+	else{
+		wireframeOpacityValue += wireframeOpacityChangeDelta;
+		if(wireframeOpacityValue > wireframeOpacityValueMax){
+			wireframeOpacityValue = wireframeOpacityValueMax;
+			wireframeOpacityIncrease = false;
+		}
+		
+	}
+
+	if(wireframeOpacityValue > .05 && wireframeOpacityValue < .95){
+		startGlassesNoise = false;
+	}
+	else{
+		startGlassesNoise = true;
+	}
+	if(wireframeOpacityValue >= 0.0 && wireframeOpacityValue <=1.0){
+		wireframeMaterial.uniforms.progress.value = wireframeOpacityValue;
+	}
+
+
+	console.log("step : " + wireframeOpacityValue)
+	
+	if(stopWireframeAnimationAfterIterationCompleted &&
+	wireframeOpacityValue >= 0.8 ||
+	wireframeOpacityValue <= 0.2
+	){
+		
+	console.log("step : " + wireframeOpacityValue + "STOP")
+		stopWireframeAnimationAfterIterationCompleted = false;
+	}
+
+	if( !wireframeAnimationPause &&
+	wireframeOpacityValue >= .48 &&
+	wireframeOpacityValue <= .52){
+		wireframeAnimationPause = true;
+	}
+
+
+	// Math.randomize();
+	// wireframeMaterial.uniforms.rand.value = Math.random();
+	// modelMaterial.uniforms.rand.value = Math.random();
+	
+	// renderer.render(scene, camera);
+
+	// timestamp *= 0.001;  // convert to seconds
+    // const deltaTime = timestamp - then;
+    // then = timestamp;
+	// composer.render(deltaTime);
+	// if(wireframeMaterial.uniforms.progress.value > 0.7 
+	// 	|| wireframeMaterial.uniforms.progress.value < 0.3){
+	// 		glitchMaterials.forEach(e => {
+	// 			e.uniforms.rand.value = Math.random();
+				
+	// 		});
+	// }
+
+	// window.requestAnimationFrame(step);
+}
+
+function hideWireframe(){
+	wireframeOpacityIncrease = false;
+	stopWireframeAnimationAfterIterationCompleted = true;
+	wireframeAnimationPause = false;
+
+}
+
+function showWireframe(){
+	wireframeOpacityIncrease = true;
+	stopWireframeAnimationAfterIterationCompleted = true;
+	wireframeAnimationPause = false;
+}
 
 let tl = gsap.timeline()
 gsap.registerPlugin(ScrollTrigger)
@@ -1010,13 +1043,13 @@ tl.to(ct,{
 		start:"top 	50%",
 		end: "top 10%",
 		localrotation: localrotationDefaultX,
-		onLeave: ()=>{
-			rotateGlassesArountLocalAxis = true;
-			stopWireframeAnimationAfterIterationCompleted = false;
-			console.log("START WIREFRAME ANIMATION")
+		// onLeave: ()=>{
+		// 	rotateGlassesArountLocalAxis = true;
+		// 	stopWireframeAnimationAfterIterationCompleted = false;
+		// 	console.log("START WIREFRAME ANIMATION")
 
-			// alert("rotate: true, stop: false")
-		}
+		// 	// alert("rotate: true, stop: false")
+		// }
 
 	}
 } )
@@ -1025,33 +1058,41 @@ tl.to(ct,{
 	x: -73.24650673205977, y: 8.66180999507814, z: -94.55249379872419,
 	scrollTrigger: {
 		trigger : ".f-content-third-wrapper",
-		toggleActions: "play none reverse none",
+		// toggleActions: "play none reverse none",
 		markers: true,
-		start:"bottom 	0%",
-		end: "bottom 0%",
+		start:"40% 50%",
+		end: "60% 50%",
 		onEnter: ()=>{
 			//reset
-			model.rotation.set(0, 0, 0);
-			wireframeModel.rotation.set(0, 0, 0);
-			rotateGlassesArountLocalAxis = false;
-			stopWireframeAnimationAfterIterationCompleted = true;
-			console.log("STOP WIREFRAME ANIMATION")
+			// model.rotation.set(0, 0, 0);
+			// wireframeModel.rotation.set(0, 0, 0);
+			rotateGlassesArountLocalAxis = true;
+			stopWireframeAnimationAfterIterationCompleted = false;
+			console.log("START WIREFRAME ANIMATION")
+			showWireframe();
 
 			// alert("STOP WIREFRAME ANIMATION")
 
-			tl.restart();
+			// tl.restart();
 		},
 		onLeave: (selft)=>{
-			console.log(self)
-			if(self.direction === -1){
-				alert()
-				console.log("START WIREFRAME ANIMATION")
-				model.rotation.set(0, 0, 0);
-				wireframeModel.rotation.set(0, 0, 0);
+			// console.log(self)
+			// if(self.direction === -1)
+			{
+				// alert("onleave")
+				console.log("STOP WIREFRAME ANIMATION")
+				// model.rotation.set(0, 0, 0);
+				// wireframeModel.rotation.set(0, 0, 0);
 				rotateGlassesArountLocalAxis = false;
 				stopWireframeAnimationAfterIterationCompleted = true;
+				wireframeAnimationPause = false;
+				hideWireframe();
 		
 			}
+		},
+		onLeaveBack: (self)=>{
+			// alert("onleaveback")
+
 		},
 		onUpdate: (self)=>{
 			// console.log(self.direction);
@@ -1116,13 +1157,14 @@ tl.to(ct,{
 controls.enabled = false;
 function animateEffect(){
 	if(rotateGlassesArountLocalAxis){
-		var rot = {x: localrotationX, y: localrotationY, z: 0}
-		model.rotation.set( rot.x, rot.y, rot.z )
-		wireframeModel.rotation.set( rot.x, rot.y, rot.z )
-		localrotationY += 0.01;
+		// var rot = {x: localrotationX, y: localrotationY, z: 0}
+		// model.rotation.set( rot.x, rot.y, rot.z )
+		// wireframeModel.rotation.set( rot.x, rot.y, rot.z )
+		// localrotationY += 0.01;
 		step();
 	}
 	else if(stopWireframeAnimationAfterIterationCompleted){
+		// console.log("stop == true")
 		step();
 	}
 
