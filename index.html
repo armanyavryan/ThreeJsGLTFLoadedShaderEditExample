@@ -605,20 +605,29 @@ var wireframeMaterial = new THREE.ShaderMaterial({
 			vec2 c;
 			c.x = 0.5;
 			c.y = 0.5;
+			float x = float(gl_FragCoord.x);
 			float y = float(gl_FragCoord.y);
 			float screenHeight = 800.0;
+			float screenWidth = 800.0;
+			float extend_x = 100.0;
 			highp float pixelYPos = y / screenHeight;
+			highp float pixelXPos = x / screenWidth;
 			float gradCenter = progress * 2.0 - 0.5;
 			float gradTop = gradCenter + 0.5;
 			float gradBottom = gradCenter - 0.5;
-			
-			if(pixelYPos > gradTop || pixelYPos < gradBottom){
+			float range = .3;
+			float dy = (pixelXPos -0.5) * range;
+
+			pixelYPos += dy;
+
+			if(pixelYPos  > gradTop || pixelYPos < gradBottom){
 				// transparent
 				gl_FragColor = vec4(0, 0, 0, 0);
 			}
 			else {
+				float ar = pixelYPos / pixelXPos;
 				gl_FragColor = vec4(color.x, color.y, color.z, 
-				(1.0 - 2.0 * abs(pixelYPos - gradCenter)) * opacity );
+				sin((1.0 - 2.0 * abs(pixelYPos - gradCenter)) * opacity) );
 			}
 		}
 	`,
