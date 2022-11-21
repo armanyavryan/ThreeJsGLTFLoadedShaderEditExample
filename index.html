@@ -609,7 +609,6 @@ var wireframeMaterial = new THREE.ShaderMaterial({
 			float y = float(gl_FragCoord.y);
 			float screenHeight = 800.0;
 			float screenWidth = 800.0;
-			float extend_x = 100.0;
 			highp float pixelYPos = y / screenHeight;
 			highp float pixelXPos = x / screenWidth;
 			float gradCenter = progress * 2.0 - 0.5;
@@ -617,7 +616,6 @@ var wireframeMaterial = new THREE.ShaderMaterial({
 			float gradBottom = gradCenter - 0.5;
 			float range = .3;
 			float dy = (pixelXPos -0.5) * range;
-
 			pixelYPos += dy;
 
 			if(pixelYPos  > gradTop || pixelYPos < gradBottom){
