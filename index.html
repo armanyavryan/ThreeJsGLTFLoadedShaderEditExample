@@ -386,7 +386,8 @@ import { FilmPass } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/postp
 import { BloomPass } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/postprocessing/BloomPass.js';
 const scene = new THREE.Scene();
 			const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-			camera.position.z = 35;
+			camera.position.z = 10;
+			// camera.position.x = -10;
 			// camera.position.x = 160
             // camera.position.y = -260
 			// camera.position.set(200,200,20)
@@ -404,10 +405,8 @@ renderer.domElement.classList.add("webgl")
 renderer.outputEncoding = THREE.sRGBEncoding;
 
 // Controls
-const controls = new OrbitControls( camera, renderer.domElement );
-controls.target.set( 125.11598259262031,  3.3623992360177746,  -2.1293410285514345e-16)
 
-
+// scene.position.x = 0.2
 			
 // Loading Model
 const dracoLoader = new DRACOLoader()
@@ -416,131 +415,9 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 dracoLoader.setDecoderConfig({ type: 'js' })
 loader.setDRACOLoader(dracoLoader)
 // let loader = new THREE.GLTFLoader()
-let model;
-let wireframeModel;
-
-var modelMaterial = new THREE.ShaderMaterial({
-	// uniforms: {
-	// 	color: {
-	// 		value: new THREE.Color(0xff00ff)
-	// 	},
-	// 	progress: {
-	// 		value: 0
-	// 	},
-	// 	opacity:{
-	// 		value: 1
-	// 	},
-	// 	noise:{
-	// 		value: true
-	// 	},
-	// 	rand:{
-	// 		value: 1
-	// 	}
-
-	// },
-	// vertexShader: `
-	// 	uniform vec2 uvScale;
-	// 	varying vec2 vUv;
-	// 	uniform bool noise;
-	// 	uniform float rand;
-
-	// 	float random(vec2 c){
-    //         return fract(sin(dot(c.xy ,vec2(12.9898,78.233))) * 43758.5453);
-	// 	}
-	// 	vec4 mod289(vec4 x) {
-    //         return x - floor(x * (1.0 / 289.0)) * 289.0;
-    //       }
-
-    //       vec4 permute(vec4 x) {
-    //            return mod289(((x*34.0)+1.0)*x);
-    //       }
-
-    //       vec4 taylorInvSqrt(vec4 r)
-    //       {
-    //         return 1.79284291400159 - 0.85373472095314 * r;
-    //       }
-
-	// 	void main()
-	// 	{
-			
-	// 		vUv = uvScale * uv;
-	// 		vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-	// 		gl_Position = projectionMatrix * mvPosition;
-	// 		vec2 c;
-	// 		c[0] = gl_Position[0];
-	// 		c[1] = gl_Position[1];
-	// 		if(noise){
-	// 			gl_Position[0] += ((random(c) - 0.5)* rand );
-	// 		}
-
-	// 	}
-	// `,
-	// fragmentShader: `
-	// 	uniform vec2 Resolution;
-	// 	uniform float bottomAlpha;
-	// 	uniform float progress;
-	// 	uniform vec3  color;
-	// 	uniform sampler2D texture;
-	// 	varying vec2 vUv;
-	// 	in vec2 texCoordV;
- 
-	// 	out vec4 colorOut;
-	// 	void main()
-	// 	{
-	// 		// float screenHeight = 800.0;
-	// 		vec2 c;
-	// 		c.x = 0.5;
-	// 		c.y = 0.5;
-	// 		float y = float(gl_FragCoord.y);
-	// 		float screenHeight = 800.0;
-	// 		highp float pixelYPos = y / screenHeight;
-	// 		float gradCenter = progress * 2.0 - 0.5;
-	// 		float gradTop = gradCenter + 0.5;
-	// 		float gradBottom = gradCenter - 0.5;
-		
-	// 		// if(pixelYPos > gradTop || pixelYPos < gradBottom){
-	// 		// 	// transparent
-	// 		// 	gl_FragColor = vec4(0, 0, 0, 0);
-	// 		// }
-	// 		// else {
-
-	// 		// 	gl_FragColor = vec4(0, 0.0, 1, 
-	// 		// 	1.0 - 2.0 * abs(pixelYPos - gradCenter) );
-	// 		// }
-			
-	// 		if(noise){
-	// 			// vec2 st = gl_FragCoord.xy/Resolution;
-	// 			// float pct = 1.0 -/ distance(st, )
-	// 			// gl_FragColor = 
-	// 		}
-	// 	}
-	// `,
-	// wireframe: true,
-	transparent: true,
-	uniforms: {
-
-	'tDiffuse': { value: null },
-	'opacity': { value: 1.0 }
-
-	},
-
-
-	vertexShader: /* glsl */`
-	varying vec2 vUv;
-	void main() {
-		vUv = uv;
-		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-	}`,
-
-	fragmentShader: /* glsl */`
-	uniform float opacity;
-	uniform sampler2D tDiffuse;
-	varying vec2 vUv;
-	void main() {
-		gl_FragColor = texture2D( tDiffuse, vUv );
-		gl_FragColor.a *= opacity;
-	}`
-});
+let model = new THREE.Group();
+let glasses = null;
+let wireframeModel = null;
 
 var wireframeMaterial = new THREE.ShaderMaterial({
 	uniforms: {
@@ -633,20 +510,206 @@ var wireframeMaterial = new THREE.ShaderMaterial({
 	transparent: true,
 });
 
-
-let str_vertex_shader_start = "uniform bool noise;\n";
-let str_fragment_shader_start = "uniform bool noise;\n";
-
 loader.load("lens.glb",(gltf)=>{
-	model = gltf.scene
+	glasses = gltf.scene
 	
-	wireframeModel = model.clone()
+	wireframeModel = glasses.clone()
+	model.add(glasses);
+	model.add(wireframeModel);
+
 	wireframeModel.traverse((child) => {
 		if (child.isMesh) child.material = wireframeMaterial; // a material i created in the code earlier
 	});
 
+	model.position.x= -28
+
+	let tl = gsap.timeline()
+gsap.registerPlugin(ScrollTrigger)
+
+ScrollTrigger.defaults({
+    immediateRender: false,
+    ease: "power1.inOut",
+    scrub: 1,
+	
+});
+
+model.rotation.z = Math.PI
+model.rotation.y = Math.PI
+model.rotation.x = Math.PI
+
+tl.to(model.position,{
+
+	x: 3,
+scrollTrigger: {
+          trigger : ".fourth-section-heading",
+            // markers: true,
+			start:"top bottom",
+                end: "top 20%",}})
+tl.to(model.rotation,{
+
+	z: Math.PI *2,
+	x: Math.PI *2,
+	y: Math.PI *2,
+scrollTrigger: {
+          trigger : ".fourth-section-heading",
+            // markers: true,
+			start:"top bottom",
+                end: "top 20%",}})
+
+tl.to(camera.position,{
+
+	z: 6,
+scrollTrigger: {
+          trigger : ".fourth-section-heading",
+            // markers: true,
+			start:"top bottom",
+                end: "top 20%",}})
+
+
+
+
+
+
+
+.to(model.position,{
+	x: -3 ,scrollTrigger: {
+          trigger : ".f-content-second-wrapper",
+            // markers: true,
+			start:"top bottom",
+                end: "top top",
+      
+			}})
+.to(model.rotation,{
+	x: Math.sin,scrollTrigger: {
+          trigger : ".f-content-second-wrapper",
+            // markers: true,
+			start:"top bottom",
+                end: "top top",
+      
+			}})
+
+
+
+
+// Section 3
+
+.to(model.position,{
+	x: 3, y:0 ,scrollTrigger: {
+          trigger : ".f-content-third-wrapper",
+            // markers: true,
+			start:"top bottom",
+                end: "top top",
+      
+			}})
+.to(model.rotation,{
+	x: -0.23,y : -0.34 ,scrollTrigger: {
+          trigger : ".f-content-third-wrapper",
+            // markers: true,
+			start:"top bottom",
+                end: "top top",
+      
+			}})
+			
+// .to(camera.position,{
+// 	z : 6.5 ,scrollTrigger: {
+//           trigger : ".f-content-third-wrapper",
+//             // markers: true,
+// 			start:"top bottom",
+//                 end: "top top",
+      
+// 			}})
+			
+			
+			// Section 4
+			
+			
+			.to(model.position,{
+				x: -3 ,scrollTrigger: {
+					  trigger : ".f-content-fourth-wrapper",
+						// markers: true,
+						start:"top 80%",
+							end: "top 10%",
+				  
+						}})
+			.to(model.rotation,{
+				z : Math.sin ,scrollTrigger: {
+					  trigger : ".f-content-fourth-wrapper",
+						// markers: true,
+						start:"top 80%",
+							end: "top 10%",
+				  
+						}})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+						
+						
+								
+
+
+
+
+
+
+
+						.to(model.position,{
+										x: 28, scrollTrigger:{
+											  trigger : ".f-content-fourth-wrapper",
+												// markers: true,
+											start:"top -20%",
+													end: "top -180%",
+												}})
+
+
+tl.to(model.rotation,{z: Math.PI *2,
+x: Math.PI *2,
+y: Math.PI *2,
+scrollTrigger: {
+	  trigger : ".f-content-fourth-wrapper",
+		// markers: true,
+		start:"top -5%",
+													end: "top -180%",}})
+
+
+
+			
+
+
+
+			// .to(model.rotation,{
+			// 	y: Math.PI/2 ,scrollTrigger:{
+			// 		  trigger : ".f-content-fourth-wrapper",
+			// 			// markers: true,
+			// 			start:"top top",
+			// 				end: "top -50%",
+			// 			}})
+			// .to(model.scale,{
+			// 	y: 0 , z : 0 , x : 0 ,scrollTrigger:{
+			// 		  trigger : ".f-content-fourth-wrapper",
+			// 			// markers: true,
+			// 			start:"top -60%",
+			// 				end: "top -100%",
+			// 			}})
+
+
+
+
+
+
 	scene.add(model)
-	scene.add(wireframeModel)
+	// scene.add(wireframeModel)
 });
 	
 	
@@ -690,20 +753,14 @@ function onWindowResize(){
 }
 
 
-
-
 // Scroll Based Animations
 let cp = camera.position
-let ct = controls.target
-let animateWireframe = false;
-var localrotationY = 0;
-var localrotationX = 0;
-const localrotationDefaultX = THREE.Math.degToRad(-15);
 
+let animateWireframe = false;
 var wireframeOpacityIncrease = false;
 var wireframeOpacityChangeDelta = 0.003;
-var wireframeOpacityValueMin = -0.1;
-var wireframeOpacityValueMax = 1.1;
+var wireframeOpacityValueMin = -0.0;
+var wireframeOpacityValueMax = 1.0;
 var wireframeOpacityValue = 0.0;
 var wireframeAnimationPause = false;
 var wireframeAppear = false;
@@ -711,11 +768,13 @@ var wireframeHide = false;
 var wireframeAppearCompleted = false;
 var wireframeHideCompleted = false;
 let stopWireframeAnimationAfterIterationCompleted = false;
-let startGlassesNoise = false;
 
 
 
 function step(timestamp) {
+	// console.log("step: wireframeOpacityValue: " + wireframeOpacityValue);
+	// console.log("step: wireframeAnimationPause: " + wireframeAnimationPause);
+	// console.log("step: wireframeOpacityValue: " + wireframeOpacityValue);
 	if(wireframeAnimationPause){return;}
 	if(!wireframeOpacityIncrease ){
 		wireframeOpacityValue -= wireframeOpacityChangeDelta;
@@ -741,12 +800,13 @@ function step(timestamp) {
 
 	
 	if(stopWireframeAnimationAfterIterationCompleted &&
-	wireframeOpacityValue >= 0.8 ||
-	wireframeOpacityValue <= 0.2
+	(wireframeOpacityValue >= 0.99 ||
+	wireframeOpacityValue <= 0.01)
 	){
 		
 		stopWireframeAnimationAfterIterationCompleted = false;
 		wireframeModel.visible= false;
+		// console.log("wireframeModel.visible= false");
 	}
 
 	if( !wireframeAnimationPause &&
@@ -757,7 +817,12 @@ function step(timestamp) {
 }
 
 function hideWireframe(){
+	// animateWireframe = true;
+
+	// alert("hideWireframe");
 	wireframeModel.visible= true;
+	// console.log("wireframeModel.visible= true");
+
 	wireframeOpacityIncrease = false;
 	stopWireframeAnimationAfterIterationCompleted = true;
 	wireframeAnimationPause = false;
@@ -765,212 +830,15 @@ function hideWireframe(){
 }
 
 function showWireframe(){
+	// animateWireframe = true;
 	wireframeModel.visible= true;
+	// console.log("wireframeModel.visible= true");
 
 	wireframeOpacityIncrease = true;
-	stopWireframeAnimationAfterIterationCompleted = true;
+	stopWireframeAnimationAfterIterationCompleted = false;
 	wireframeAnimationPause = false;
 }
 
-let tl = gsap.timeline()
-gsap.registerPlugin(ScrollTrigger)
-
-ScrollTrigger.defaults({
-    immediateRender: false,
-    ease: "power1.inOut",
-    scrub: 3,
-	toggleActions: "restart pause resume pause"
-});
-
-
-// Section 1
-tl.to(ct,{
-		x: -19.243866289343316,
- y: 8.27821872715545,
-	 z: 0.33394623182050254,scrollTrigger: {
-          trigger : ".fourth-section-heading",
-            // markers: true,
-			start:"top bottom",
-                end: "top 40%",}})
-				
-.to(cp,{
-	x: 4.670487593998782, y: 3.6241357012952466, z: 27.97058694215801,scrollTrigger: {
-          trigger : ".fourth-section-heading",
-            // markers: true,
-			start:"top bottom",
-                end: "top 40%",
-      
-          }
-		  
-		} )
-tl.to(ct,{
-		x: -19.243866289343316,
- y: 80.27821872715545,
-	 z: 50.33394623182050254,scrollTrigger: {
-          trigger : ".fourth-section-heading",
-            // markers: true,
-			start:"top 20%",
-                end: "top top",}})
-
-.to(cp,{
-	x: 16.670487593998782, y: 15.6241357012952466, z: 87.97058694215801,scrollTrigger: {
-          trigger : ".fourth-section-heading",
-            // markers: true,
-			start:"top 20% ",
-                end: "top top",
-      
-          }
-		  
-		} )
-		
-
-
-
-
-
-
-
-
-
-
-
-		// Section 2 Tracking Cameras
-	
-		
-		
-.to(ct,{
-	x: 4.011325101416783, y: 8.533385891222652, z: -108.5112699268946,scrollTrigger: {
-          trigger : ".f-content-second-wrapper",
-            // markers: true,
-			start:"top bottom",
-                end: "top top",
-      
-			}
-	 
-		} )
-		.to(cp,{
-			x: -17.232208614184447, y: 4.967725047499342, z: 21.8101260390995,scrollTrigger: {
-				trigger : ".f-content-second-wrapper",
-            // markers: true,
-			start:"top bottom",
-                end: "top top",
-      
-          }
-		  
-		} )
-		
-
-// Section 3 Glasses
-
-
-
-
-.to(ct,{
-	x: -91.35450100234142, y: 19.978327927775556, z: -78.62142774352922,scrollTrigger: {
-          trigger : ".f-content-third-wrapper",
-            markers: true,
-			start:"top 50%",
-			end: "50% top",
-			onEnter: ()=>{
-				animateWireframe = true;
-				stopWireframeAnimationAfterIterationCompleted = false;
-				showWireframe();
-			},
-			onLeave: (selft)=>{
-				{
-					animateWireframe = false;
-					stopWireframeAnimationAfterIterationCompleted = true;
-					wireframeAnimationPause = false;
-					hideWireframe();
-			
-				}
-			},
-			
-	 
-		}
-	} )
-		.to(cp,{
-			x: 7.516650532497991, y: -1.4583341141347184, z: 25.143046288390323,scrollTrigger: {
-				trigger : ".f-content-third-wrapper",
-            // markers: true,
-			start:"top bottom",
-                end: "top top",
-      
-          }
-		  
-		} )
-
-
-
-
-
-// Section Four
-
-
-
-.to(ct,{
-	x: -73.24650673205977, y: 8.66180999507814, z: -94.55249379872419,scrollTrigger: {
-          trigger : ".f-content-fourth-wrapper",
-            // markers: true,
-			start:"top bottom",
-                end: "top top",
-      
-			}
-	 
-		} )
-		.to(cp,{
-			x: 1.4016060749117685, y: 5.5027265598595285, z: 29.623915741143136,scrollTrigger: {
-				trigger : ".f-content-fourth-wrapper",
-            // markers: true,
-			start:"top bottom",
-                end: "top top",
-      
-          }
-		  
-		} )
-
-
-		.to(ct,{
-			x: 1.1927247953322435, y: 5.89177237712845, z: -1.1304356860014864,scrollTrigger: {
-          trigger : ".f-content-fourth-wrapper",
-            // markers: true,
-			start:"top 20%",
-                end: "top top",
-      
-			}
-	 
-		} )
-
-
-
-
-
-		.to(scene.rotation,{
-			y:  Math.PI * 2  ,scrollTrigger: {
-          trigger : ".f-content-fourth-wrapper",
-            // markers: true,
-			start:"top 50%",
-                end: "top top",
-      scrub : 10,
-			}
-	 
-	})
-		.to(scene.scale,{
-			x : 0,
-			y : 0,
-			z : 0
-			
-			,scrollTrigger: {
-          trigger : ".f-content-fourth-wrapper",
-            // markers: true,
-			start:"center + 800px",
-                end: "top",
-      
-			}
-	 
-	})
-	
-controls.enabled = false;
 function animateEffect(){
 	if(animateWireframe){
 		step();
@@ -984,11 +852,224 @@ function animateEffect(){
 
 function animate() {
 	requestAnimationFrame( animate );
-	controls.update()
+	// controls.update()
 	animateEffect();
 	renderer.render( scene, camera );
+
 };
+
 animate();
+
+
+class ObjectInViewportEventProvider{
+	#element = null;
+	#POS_IN_VIEWPORT_STATES = { ABOVE: 0, IN: 1, BELLOW: 2}; 
+	#regionInfo = {
+			top: 	this.#POS_IN_VIEWPORT_STATES.BELLOW, 
+			bottom: this.#POS_IN_VIEWPORT_STATES.BELLOW
+	};
+
+	#enterEventCallbacks = []
+	#leaveEventCallbacks = []
+	#div = null;
+	#markerTop = null;
+	#markerBottom = null;
+	#viewportTopPercent = 0;
+	#viewPortBottomPercent = 1;
+	constructor(element, viewportTopPercent = 0, viewPortBottomPercent = 1, markers = false){
+		this.#element = element;
+		this.#viewportTopPercent = viewportTopPercent;
+		this.#viewPortBottomPercent = viewPortBottomPercent;
+
+		this.#check(this.#regionInfo);
+		if(markers)
+		{
+			let div = document.createElement("div");
+			div.style.width = 50 + 'px';
+			div.style.height = 50 + 'px';
+			div.style.backgroundColor = "grey";
+			div.style.position = 'fixed';
+			div.style.top = 0;
+			div.style.left = 0;
+			document.body.appendChild(div);
+			this.#div = div;
+		}
+		if(markers)
+		{
+			let markerTop = document.createElement("div");
+			markerTop.style.width = 50 + 'px';
+			markerTop.style.height = 2 + 'px';
+			markerTop.style.backgroundColor = "green";
+			markerTop.style.color = "green";
+			markerTop.style.position = 'absolute';
+			markerTop.style.top = this.#element.getBoundingClientRect().y + 'px';
+			markerTop.style.right = 0;
+			markerTop.innerHTML = "Top"
+			document.body.appendChild(markerTop);
+			this.#markerTop = markerTop;
+			
+		}
+		if(markers)
+		{
+			let markerBottom = document.createElement("div");
+			markerBottom.style.width = 50 + 'px';
+			markerBottom.style.height = 2 + 'px';
+			markerBottom.style.backgroundColor = "red";
+			markerBottom.style.color = "red";
+			markerBottom.style.position = 'absolute';
+			markerBottom.style.top = this.#element.getBoundingClientRect().y + this.#element.getBoundingClientRect().height + "px";
+			markerBottom.style.right = 0;
+			markerBottom.innerHTML = "Bottom"
+			document.body.appendChild(markerBottom);
+			this.#markerBottom = markerBottom;
+		}
+
+		if(markers)
+		// viewport
+		{
+			let markerTopViewport = document.createElement("div");
+			markerTopViewport.style.width = 50 + 'px';
+			markerTopViewport.style.height = 5 + 'px';
+			markerTopViewport.style.backgroundColor = "green";
+			markerTopViewport.style.color = "green";
+			markerTopViewport.style.position = 'fixed';
+			markerTopViewport.style.top = window.innerHeight * viewportTopPercent + 'px';
+			markerTopViewport.style.right = 0;
+			markerTopViewport.innerHTML = "Top"
+			document.body.appendChild(markerTopViewport);
+			
+		}
+
+		// viewport
+		if(markers)
+		{
+			let markerBottomViewport = document.createElement("div");
+			markerBottomViewport.style.width = 50 + 'px';
+			markerBottomViewport.style.height = 5 + 'px';
+			markerBottomViewport.style.backgroundColor = "red";
+			markerBottomViewport.style.color = "red";
+			markerBottomViewport.style.position = 'fixed';
+			markerBottomViewport.style.top = window.innerHeight * viewPortBottomPercent + 'px';
+			markerBottomViewport.style.right = 0;
+			markerBottomViewport.innerHTML = "Bottom"
+			document.body.appendChild(markerBottomViewport);
+			
+		}
+
+	}
+
+	addEnterEventListener(callback){
+		this.#enterEventCallbacks.push(callback);
+	}
+
+	addLeaveEventListener(callback){
+		this.#leaveEventCallbacks.push(callback);
+	}
+
+	handleMouseEvent(event){
+		if(event == null){return false;}
+		const regionInfo = this.#calcRegionInViewport();
+		this.#check(regionInfo);
+	}
+	
+	#check(regionInfo){
+		// check if one of the top or bottom sides just entered in viewport
+		if(
+			(   regionInfo.bottom != this.#POS_IN_VIEWPORT_STATES.ABOVE && 
+				this.#regionInfo.top == this.#POS_IN_VIEWPORT_STATES.BELLOW && 
+				regionInfo.top != this.#POS_IN_VIEWPORT_STATES.BELLOW )
+			||
+			(   regionInfo.top != this.#POS_IN_VIEWPORT_STATES.BELLOW &&
+				this.#regionInfo.bottom == this.#POS_IN_VIEWPORT_STATES.ABOVE && 
+				regionInfo.bottom != this.#POS_IN_VIEWPORT_STATES.ABOVE )
+			){
+			// console.log("ENTER")
+			this.#triggerEnterEvent();
+			if(this.#div){
+				this.#div.style.backgroundColor = 'green';
+			}
+
+		}
+		if(
+			(this.#regionInfo.bottom != this.#POS_IN_VIEWPORT_STATES.ABOVE &&
+			this.#regionInfo.top != this.#POS_IN_VIEWPORT_STATES.BELLOW &&
+			 regionInfo.top == this.#POS_IN_VIEWPORT_STATES.BELLOW )
+			||
+			(this.#regionInfo.top != this.#POS_IN_VIEWPORT_STATES.BELLOW &&
+			 this.#regionInfo.bottom != this.#POS_IN_VIEWPORT_STATES.ABOVE &&
+			 regionInfo.bottom == this.#POS_IN_VIEWPORT_STATES.ABOVE )
+		){
+			// console.log("LEAVE")
+			this.#triggerLeaveEvent();
+			if(this.#div){
+				this.#div.style.backgroundColor = 'red'
+			}
+		}
+		
+
+
+		// Update Region Info
+		this.#regionInfo = regionInfo; 
+	}
+
+	#calcRegionInViewport(){
+		if(this.#element == null){return;}
+		const r = this.#element.getBoundingClientRect();
+		const viewportTop = r.y;
+		const viewportBottom = r.y + r.height;
+		const regionInfo = {
+			top: 	this.#POS_IN_VIEWPORT_STATES.BELLOW, 
+			bottom: this.#POS_IN_VIEWPORT_STATES.BELLOW
+		};
+		if(viewportTop < this.#viewportTopPercent * window.innerHeight){
+			regionInfo.top = this.#POS_IN_VIEWPORT_STATES.ABOVE
+		}
+		else if(viewportTop < this.#viewPortBottomPercent * window.innerHeight){
+			regionInfo.top = this.#POS_IN_VIEWPORT_STATES.IN
+		}
+
+		if(viewportBottom < this.#viewportTopPercent * window.innerHeight){
+			regionInfo.bottom = this.#POS_IN_VIEWPORT_STATES.ABOVE
+		}
+		else if(viewportBottom < this.#viewPortBottomPercent * window.innerHeight){
+			regionInfo.bottom = this.#POS_IN_VIEWPORT_STATES.IN
+		}
+		return regionInfo;
+	}
+
+	#triggerEnterEvent(){
+		this.#enterEventCallbacks.forEach(callback => {
+			callback();
+		});
+	}
+	
+	#triggerLeaveEvent(){
+		this.#leaveEventCallbacks.forEach(callback => {
+			callback();
+		});
+	}
+}
+
+const AR_VersatalityEventProvider =  new ObjectInViewportEventProvider(document.querySelector(".f-content-third-wrapper"), 0.2, 0.8);
+
+AR_VersatalityEventProvider.addEnterEventListener(()=>{
+	animateWireframe = true;
+	// stopWireframeAnimationAfterIterationCompleted = true;
+	// wireframeAnimationPause = false;
+	showWireframe();
+});
+
+AR_VersatalityEventProvider.addLeaveEventListener(()=>{
+	// alert("hide")
+	animateWireframe = false;
+	stopWireframeAnimationAfterIterationCompleted = true;
+	wireframeAnimationPause = false;
+	hideWireframe();
+});
+
+$(window).scroll(function(e) {
+	AR_VersatalityEventProvider.handleMouseEvent(e);
+});
 
 </script>
 
@@ -1405,13 +1486,15 @@ animate();
 		display: "block"
 	});
 	</script>
-	<script>
+	<script type="text/javascript">
+
 	function scrollVideo() {
 		// var video = $('#video').get(0),
 		// videoLength = video.duration,
 		// scrollPosition = $(document).scrollTop();
 		// video.currentTime = (scrollPosition / ($(document).height() - $(window).height())) * videoLength;
 	}
+
 	$(window).scroll(function(e) {
 		scrollVideo();
 	});
